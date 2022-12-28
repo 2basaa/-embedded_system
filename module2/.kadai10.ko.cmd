@@ -1,0 +1,1 @@
+cmd_/home/pi/kumikomi/module2/kadai10.ko := ld -r -EL -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/pi/kumikomi/module2/kadai10.ko /home/pi/kumikomi/module2/kadai10.o /home/pi/kumikomi/module2/kadai10.mod.o;  true

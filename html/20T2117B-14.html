@@ -1,0 +1,346 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>20T2117B-14</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <section class="section">
+        <h1 class="title">加速度センサの制御</h1>
+        <div class="box">
+            <div class="field">
+                <label class="label">1.デバイスのリセット</label>
+            </div>
+            <button class="button is-light" type="button" id="Reset" onclick="resetData()">リセット</button>
+        </div>
+        <div class="box">
+            <div class="field">
+                <label class="label">2.軸の有効・無効の切り替え</label>
+            </div>
+            <button class="button is-light" type="button" id="xen" onclick="changeXen()">x軸は有効</button>
+            <button class="button is-light" type="button" id="yen" onclick="changeYen()">y軸は有効</button>
+            <button class="button is-light" type="button" id="zen" onclick="changeZen()">z軸は有効</button>
+        </div>
+        <div class="box">
+            <div class="field">
+                <label class="label">3.測定範囲の切り替え</label>
+            </div>
+            <form id="scale" onclick="changeScale()">
+                <div class="control">
+                    <label class="radio">
+                        <input type="radio" name="g" value="2g" checked>
+                        +/-2[g]
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="g" value="4g">
+                        +/-4[g]
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="g" value="8g">
+                        +/-8[g]
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="box">
+            <div class="field">
+                <label class="label">4.データの更新速度の切り替え</label>
+            </div>
+            <form id="freq" onclick="changeFrequency()">
+                <div class="control">
+                    <label class="radio">
+                        <input type="radio" name="hz" value="1" checked>
+                        1[Hz]
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="hz" value="10">
+                        10[Hz]
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="hz" value="25">
+                        25[Hz]
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="box hero is-halfheight">
+            <div class="hero-head">
+                <div class="field">
+                    <label class="label">5.データとグラフの表示</label>
+                </div>
+                <div class="columns">
+                    <div class="column">
+                        <div class="content">
+                            <p id="xPlace">X=</p>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="content">
+                            <p id="yPlace">Y=</p>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="content">
+                            <p id="zPlace">Z=</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-body">
+                <div class="columns">
+                    <div class="column is-full">
+                        <canvas id="graph"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        const xable = "x軸は有効";
+        const xdisable = "x軸は無効";
+        const yable = "y軸は有効";
+        const ydisable = "y軸は無効";
+        const zable = "z軸は有効";
+        const zdisable = "z軸は無効";
+        var reset = "0";
+        var xen = "1";
+        var yen = "1";
+        var zen = "1";
+        var hz_value = "1";
+        var int_hz = 1;
+        var label_time = 0;
+        var time = 1000;
+        var scale_range = "2g";
+        var minScale = -2;
+        var maxScale = 2;
+        var graphID = document.getElementById("graph");
+        var myTimer;
+        var xVal = [];
+        var yVal = [];
+        var zVal = [];
+        var count = 1;
+        var countVal = [];
+        var myChart = new Chart(graphID, {
+            type: 'line',
+            data: {
+                labels: countVal,
+                datasets: [{
+                    label: 'Xaxis Data',
+                    fill: false,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    borderColor: 'red',
+                    backgroundColor: 'red',
+                    data: xVal,
+                }, {
+                    label: 'Yaxis Data',
+                    fill: false,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    borderColor: 'blue',
+                    backgroundColor: 'blue',
+                    data: yVal,
+                }, {
+                    label: 'Zaxis Data',
+                    fill: false,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    borderColor: 'yellow',
+                    backgroundColor: 'yellow',
+                    data: zVal,
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 0,
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        fontSize: 14,
+                        fontColor: '#23993d',
+                        text: 'Graph Title',
+                    }
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            fontSize: 14,
+                            fontColor: 'blue',
+                            text: 'Time(s)',
+                        },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            fontSize: 14,
+                            fontColor: 'blue',
+                            text: 'Gravity(g)',
+                        },
+                        ticks: {
+                            min: minScale,
+                            max: maxScale,
+                            stepSize: 0.5,
+                        }
+                    }
+                }
+            }
+        });
+        myChart.canvas.parentNode.style.height = '400px';
+        myChart.canvas.parentNode.style.width = '1000px';
+
+
+        async function graphViewer() {
+            return new Promise(resolve => {
+                sleep(time).then(() => {
+                    loadDoc("/cgi-bin/20T2117B-13.cgi?Reset=" + encodeURI(reset) +
+                        "&xvalue=" + encodeURI(xen) + "&yvalue=" + encodeURI(yen) + "&zvalue=" + encodeURI(zen) +
+                        "&frequency=" + encodeURI(hz_value) + "&scale=" + encodeURI(scale_range), load);
+                    addData();
+                    graphViewer();
+                })
+            });
+        }
+
+        function sleep(ms) {
+            return new Promise(function (resolve) {
+                setTimeout(resolve, ms)
+            })
+        }
+
+        function loadDoc(url, callBack) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    callBack(this);
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+        function load(xhttp) {
+            xmlDoc = xhttp.responseXML;
+            var x = xmlDoc.getElementsByTagName("x");
+            var y = xmlDoc.getElementsByTagName("y");
+            var z = xmlDoc.getElementsByTagName("z");
+            var docContentx = "X=" + x[0].childNodes[0].nodeValue;
+            var docContenty = "Y=" + y[0].childNodes[0].nodeValue;
+            var docContentz = "Z=" + z[0].childNodes[0].nodeValue;
+            document.getElementById("xPlace").innerHTML = docContentx;
+            document.getElementById("yPlace").innerHTML = docContenty;
+            document.getElementById("zPlace").innerHTML = docContentz;
+            countVal.push(label_time);
+            xVal.push(x[0].childNodes[0].nodeValue);
+            yVal.push(y[0].childNodes[0].nodeValue);
+            zVal.push(z[0].childNodes[0].nodeValue);
+            // marumekomi
+            nextVal = Math.round((label_time + (Math.round((1000 / int_hz)) / 1000)) * 1000) / 1000;
+            label_time = nextVal;
+            //count += 1;
+        }
+        function addData() {
+            myChart.data.labels = countVal;
+            myChart.data.datasets[0].data = xVal;
+            myChart.data.datasets[1].data = yVal;
+            myChart.data.datasets[2].data = zVal;
+            myChart.update();
+        }
+        function resetData() {
+            var xbutton = document.getElementById("xen");
+            var ybutton = document.getElementById("yen");
+            var zbutton = document.getElementById("zen");
+            xen = "1";
+            xbutton.textContent = xable;
+            yen = "1";
+            ybutton.textContent = yable;
+            zen = "1";
+            zbutton.textContent = zable;
+            hz_value = "1";
+            scale_range = "2g";
+        }
+        function changeXen() {
+            let btn = document.getElementById("xen");
+            if (btn.textContent == xable) {
+                btn.textContent = xdisable;
+                xen = "0";
+            }
+            else if (btn.textContent == xdisable) {
+                btn.textContent = xable;
+                xen = "1";
+            }
+        }
+        function changeYen() {
+            const btn = document.getElementById("yen");
+            if (btn.textContent == yable) {
+                btn.textContent = ydisable;
+                yen = "0";
+            }
+            else if (btn.textContent == ydisable) {
+                btn.textContent = yable;
+                yen = "1";
+            }
+        }
+        function changeZen() {
+            const btn = document.getElementById("zen");
+            if (btn.textContent == zable) {
+                btn.textContent = zdisable;
+                zen = "0";
+            }
+            else if (btn.textContent == zdisable) {
+                btn.textContent = zable;
+                zen = "1";
+            }
+        }
+        function changeFrequency() {
+            var freq_element = document.getElementById("freq");
+            //get name="hz"
+            var freq_name = freq_element.hz;
+            //get value="g"
+            var freq_value = freq_name.value;
+            if (freq_value == "1") {
+                hz_value = "1";
+                int_hz = 1;
+            }
+            else if (freq_value == "10") {
+                hz_value = "10";
+                int_hz = 10;
+            }
+            else if (freq_value == "25") {
+                hz_value = "25";
+                int_hz = 25;
+            }
+            time = 1000 / int_hz;
+        }
+        function changeScale() {
+            var scale_element = document.getElementById("scale");
+            var scale_name = scale_element.g;
+            var scale_value = scale_name.value;
+            if (scale_value == "2g") {
+                scale_range = "2g";
+                minScale = -2;
+                maxScale = 2;
+            }
+            else if (scale_value == "4g") {
+                scale_range = "4g";
+                minScale = -4;
+                maxScale = 4;
+            }
+            else if (scale_value == "8g") {
+                scale_range = "8g";
+                minScale = -8;
+                maxScale = 8;
+            }
+        }
+        graphViewer();
+    </script>
+
+</html>

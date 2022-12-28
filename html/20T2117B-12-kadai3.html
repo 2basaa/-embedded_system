@@ -1,0 +1,39 @@
+<html><head>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h3>Receive Data using AJAX</h3>
+    <p id="xPlace">X</p>
+    <p id="yPlace">Y</p>
+    <p id="zPlace">Z</p>
+
+<script>
+    var myTimer;
+    startT();
+    function startT() {
+        myTimer = setInterval(function(){loadDoc('/cgi-bin/senddata.cgi',load)},500)
+    }
+    function loadDoc(url, callBack) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                callBack(this);
+            }
+        };
+        xhttp.open("GET",url,true);
+        xhttp.send();
+    }
+    function load(xhttp) {
+        xmlDoc = xhttp.responseXML;
+        var x = xmlDoc.getElementsByTagName("x");
+        var y = xmlDoc.getElementsByTagName("y");
+        var z = xmlDoc.getElementsByTagName("z");
+        var docContentx = "X=" + x[0].childNodes[0].nodeValue;
+        var docContenty = "Y=" + y[0].childNodes[0].nodeValue;
+        var docContentz = "Z=" + z[0].childNodes[0].nodeValue;
+        document.getElementById("xPlace").innerHTML = docContentx;
+        document.getElementById("yPlace").innerHTML = docContenty;
+        document.getElementById("zPlace").innerHTML = docContentz;
+    }
+</script>
+</body></html>

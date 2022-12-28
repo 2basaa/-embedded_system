@@ -1,0 +1,131 @@
+<html>
+<head>
+<script src="chart.min.js"></script>
+</head>
+<body>
+<h3>Chart Test</h3>
+<button id="but" onclick="addData()">Add data</button>
+<p id="xPlace">X</p>
+<p id="yPlace">Y</p>
+<p id="zPlace">Z</p>
+<br>
+<canvas id="graph" width="600" height="400"></canvas>
+<script>
+  var graphID = document.getElementById("graph");
+  var myTimer;
+  var xVal = [];
+  var yVal = [];
+  var zVal = [];
+  var count = 1;
+  var countVal = [];
+  var myChart = new Chart(graphID, {
+    type: 'line',
+    data: {
+      labels: countVal,
+      datasets: [{
+        label: 'Xaxis Data',
+        fill: false,
+        lineTension: 0,
+        borderWidth: 1,
+        borderColor: 'red',
+        backgroundColor: 'red',
+        data: xVal,
+      },{
+      label: 'Yaxis Data',
+        fill: false,
+        lineTension: 0,
+        borderWidth: 1,
+        borderColor: 'blue',
+        backgroundColor: 'blue',
+        data: yVal,
+      },{
+      label: 'Zaxis Data',
+        fill: false,
+        lineTension: 0,
+        borderWidth: 1,
+        borderColor: 'yellow',
+        backgroundColor: 'yellow',
+        data: zVal,
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: {
+        duration: 0,
+      },
+      title: {
+        display: true,
+        fontSize: 14,
+        fontColor: '#23993d',
+        text: 'Graph Title',
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      scales: {
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            fontSize: 14,
+            fontColor: 'blue',
+            labelString: 'Time',
+          },
+        }],
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Value',
+          },
+          ticks: {
+            min: 0,
+            max: 100,
+            stepSize: 5,
+          }
+        }]
+      }
+    }
+  });
+
+  function startT() {
+          myTimer = setInterval(function(){loadDoc('/cgi-bin/senddata.cgi',load)},500)
+      }
+  function loadDoc(url, callBack) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+              callBack(this);
+          }
+      };
+      xhttp.open("GET",url,true);
+      xhttp.send();
+  }
+  function load(xhttp) {
+      xmlDoc = xhttp.responseXML;
+      var x = xmlDoc.getElementsByTagName("x");
+      var y = xmlDoc.getElementsByTagName("y");
+      var z = xmlDoc.getElementsByTagName("z");
+      var docContentx = "X=" + x[0].childNodes[0].nodeValue;
+      var docContenty = "Y=" + y[0].childNodes[0].nodeValue;
+      var docContentz = "Z=" + z[0].childNodes[0].nodeValue;
+      document.getElementById("xPlace").innerHTML = docContentx;
+      document.getElementById("yPlace").innerHTML = docContenty;
+      document.getElementById("zPlace").innerHTML = docContentz;  
+      countVal.push(count);  
+      xVal.push(x[0].childNodes[0].nodeValue);
+      yVal.push(y[0].childNodes[0].nodeValue);
+      zVal.push(z[0].childNodes[0].nodeValue);
+      count += 1;
+  }
+  function addData() {
+    myChart.data.labels = countVal;
+    myChart.data.datasets[0].data = xVal;
+    myChart.data.datasets[1].data = yVal;
+    myChart.data.datasets[2].data = zVal;
+    myChart.update();
+  }
+  startT();
+
+</script>
+</body>
+</html>

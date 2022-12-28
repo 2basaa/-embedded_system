@@ -1,0 +1,36 @@
+<html><head>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h3>Update using a Timer and AJAX</h3>
+    <p id="change">AJAXでこの部分を変更します</p>
+    <button id="but" onclick="loadDoc('/cgi-bin/20T2117B-12-kadai1.cgi?mode=date',load)">Date</button>
+    <button id="but"  onclick="loadDoc('/cgi-bin/20T2117B-12-kadai1.cgi?mode=time',load)">Current Time</button>
+    <button id="but" onclick="startT()">Update</button>
+    <button id="but" onclick="stopT()">Stop</button>
+    
+    <script>
+    var myTimer;
+
+    function startT() {
+      myTimer = setInterval(function(){loadDoc('/cgi-bin/20T2117B-12-kadai1.cgi?mode=time',load)},1000)
+    }
+    function stopT() {
+      clearInterval(myTimer);
+    }
+    
+    function loadDoc(url,callBack) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          callBack(this);
+        }
+      };
+      xhttp.open("GET",url,true);
+      xhttp.send();
+    }
+    function load(xhttp) {
+      document.getElementById("change").innerHTML = xhttp.responseText;
+    }
+    </script>
+    </body></html>
